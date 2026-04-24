@@ -80,6 +80,70 @@ for c in client.active_clients():
         print(c.get("hostname"), c.get("ip"), c.get("signal"))
 ```
 
+## Run as a Docker service
+
+The package also ships an HTTP server (`unifi-control-server`) that wraps the
+same queries behind a small JSON REST API. Zero runtime deps — just stdlib
+`http.server`.
+
+### Quickstart with docker compose
+
+Pre-built multi-arch images (amd64 + arm64) are published at
+[`stigachen/unifi-control`](https://hub.docker.com/r/stigachen/unifi-control)
+on Docker Hub.
+
+```bash
+cat > .env <<EOF
+UNIFI_HOST=https://192.168.1.1
+UNIFI_API_KEY=your-unifi-api-key-here
+UNIFI_SITE=default
+UNIFI_VERIFY_SSL=false
+EOF
+
+# Pull from Docker Hub (no local build needed):
+docker run -d --name unifi-control --restart unless-stopped \
+  -p 8787:8787 --env-file .env \
+  stigachen/unifi-control:latest
+
+# Or with the bundled compose file (also works without a local checkout —
+# it builds from source by default; edit `image:` / remove `build:` to pull instead):
+docker compose up -d --build
+```
+
+The compose file binds the container to `0.0.0.0:8787` — reachable from
+other devices on the LAN at `http://<this-machine-lan-ip>:8787`. Change to
+`127.0.0.1:8787:8787` in `docker-compose.yml` if you want loopback only.
+
+> Note: the server has **no authentication**. Anyone on the same network
+> can query your client list. Fine for a trusted home LAN; if you're on a
+> shared/office network or want to expose this further, add a reverse
+> proxy with auth in front of it.
+
+### Endpoints
+
+```bash
+curl -s 'http://127.0.0.1:8787/healthz'
+curl -s 'http://127.0.0.1:8787/clients/online?q=iphone'
+curl -s 'http://127.0.0.1:8787/clients/offline?q=laptop&within_hours=2160'
+```
+
+Response shape matches the CLI: `{"mode", "query", "count", "results": [...]}`.
+
+### Configuration
+
+Resolved in this order:
+
+1. Env vars `UNIFI_HOST` + `UNIFI_API_KEY` (and optional `UNIFI_SITE`,
+   `UNIFI_VERIFY_SSL`) — wins if both required vars are set.
+2. JSON file at `$UNIFI_CONTROL_CONFIG`, else
+   `~/.config/unifi-control/config.json` (mount it into the container at
+   that path or override the env var — see the commented `volumes` block in
+   `docker-compose.yml`).
+
+`HOST` / `PORT` env vars control the bind address inside the container
+(defaults `0.0.0.0:8787`). The server is read-only — no write endpoints,
+same invariant as the CLI.
+
 ## Notes
 
 - Read-only. The CLI never issues anything other than GET requests.

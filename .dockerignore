@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+build
+dist
+.DS_Store
+.claude
+
+# Never bake credentials into the image
+config.json
+.env

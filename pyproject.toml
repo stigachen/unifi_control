@@ -14,6 +14,7 @@ dependencies = []
 
 [project.scripts]
 unifi-control = "unifi_control_cli.cli:main"
+unifi-control-server = "unifi_control_cli.server:main"
 
 [tool.setuptools.packages.find]
 include = ["unifi_control_cli*"]
