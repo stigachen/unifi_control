@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unifi-control"
+version = "0.1.0"
+description = "Query a self-hosted UniFi Network controller (UDM/UDM-Pro/Cloud Key) for clients by fuzzy name match."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Guang Chen" }]
+dependencies = []
+
+[project.scripts]
+unifi-control = "unifi_control_cli.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["unifi_control_cli*"]
